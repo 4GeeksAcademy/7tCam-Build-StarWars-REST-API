@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Characters
 #from models import Person
 
 app = Flask(__name__)
@@ -35,15 +35,44 @@ def handle_invalid_usage(error):
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
-
-@app.route('/user', methods=['GET'])
-def handle_hello():
-
+#endpoints
+@app.route('/characters', methods=['GET'])
+def add_all_characters():
+    # consultar todos sus registros del modelo
+    query_results = Characters.query.all()
+    #imprime los registros que estamos obteniendo
+    print(query_results)
+    #como nos devuelve una lista debemos recorrerla con map o for:, queremos que cada elemento sea un objeto
+    # funcion lamba siempre va | elemento:cada vez que se posicione en ese elmento se aplica el metodo, name de la list iterada
+    result = map(lambda item:item.serialize(), query_results)
+    #imprimiendo el resultado despues de iterar la lista
+    print(result)
+    #como de vuelve un codigo de bajo nivel en una lista, se recomienda castear con list()
+    result = list(map(lambda item:item.serialize(), query_results))
+    #ahora el resultado esperado es una lista con diccionarios, serialize() las convierte
+    print(result)
+    #lo que se vera cuando se solicite la API
     response_body = {
-        "msg": "Hello, this is your GET /user response "
+        "msg": "ok",
+        "results" : result
     }
-
     return jsonify(response_body), 200
+    #obtener la info de un solo personaje
+@app.route('/character/<int:character_id>', methods=['GET'])
+def add_a_character(character_id):
+    #probando si mi endpoint funciona:
+    print(character_id)
+    query_character = Characters.query.filter_by(id=character_id).first()
+    #imprimiendo lo que estoy consultando
+    print(query_character)
+    #volviendolo a diccionario
+    result = query_character.serialize()
+    response_body = {
+        "msg": "ok",
+        "result" : result
+    }
+    return jsonify(response_body), 200
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
