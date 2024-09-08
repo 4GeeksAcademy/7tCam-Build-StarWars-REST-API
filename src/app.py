@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Characters
+from models import db, User, Characters, Planets
 #from models import Person
 
 app = Flask(__name__)
@@ -59,7 +59,7 @@ def add_all_characters():
     return jsonify(response_body), 200
     #obtener la info de un solo personaje
 @app.route('/character/<int:character_id>', methods=['GET'])
-def add_a_character(character_id):
+def get_a_character(character_id):
     #probando si mi endpoint funciona:
     print(character_id)
     query_character = Characters.query.filter_by(id=character_id).first()
@@ -72,6 +72,52 @@ def add_a_character(character_id):
         "result" : result
     }
     return jsonify(response_body), 200
+
+#Listando todos los registros de  planets
+@app.route('/planets', methods=['GET'])
+def add_all_planets():
+    # consultando a la base de datos
+    query_result = Planets.query.all()
+    #imprimiendo
+    print(query_result)
+    #obtengo una lista con dos item, cambiandolo a formato diccionario
+    new_result = map( lambda item:item.serialize(), query_result) 
+    print(new_result)
+    #castear
+    result = list(map( lambda item:item.serialize(), query_result) )
+    print(result)
+
+    body_response = {
+        "msg" : "ok",
+        "result" : result
+    }
+    return jsonify(body_response), 200
+# mostrar la info de un planeta segun su if 
+@app.route('/planet/<int:planet_id>', methods=['GET'])
+def get_a_planet(planet_id):
+    print(planet_id)
+    query_planet = Planets.query.filter_by(id=planet_id).first()
+    print(query_planet)
+    result = query_planet.serialize()
+    print(result)
+    body_response = {
+        "msg" : "ok",
+        "result" : result
+    }
+    return jsonify(body_response), 200
+
+
+
+
+
+
+
+
+
+
+
+
+   
 
 
 # this only runs if `$ python src/app.py` is executed
