@@ -1,4 +1,5 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import DateTime
+# Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -15,8 +16,7 @@ class User(db.Model):
     last_name = db.Column(db.String(250), nullable=False)
     email = db.Column(db.String(250), nullable=False)
     password = db.Column(db.String(250), nullable=False)
-    fecha_suscrip = Column(DateTime, nullable=False, default=datetime.utcnow)
-
+    # fecha_suscrip = db.Column(DateTime, nullable=False, default=datetime.utcnow)
     # favorites = db.relationship('Favorites', backref='user', lazy=True)
     # Relación uno a muchos con Favorite
     favorites = db.relationship('Favorites', back_populates='user')
@@ -110,20 +110,16 @@ class Favorites(db.Model):
     #Relaciones y Relaciones Inversas (Backref), si deseas acceder a los favoritos desde user
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    #indicando que desde user puedo acceder a favorites, con backref
+    #indicando que desde user puedo acceder a favorites, con backref o back_populates
 
     user = db.relationship('User', back_populates='favorites')
-
-
-
+    
     character_id = db.Column(db.Integer, db.ForeignKey('characters.id'))
     character = db.relationship('Characters')
 
-
     planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'))
     planet = db.relationship('Planets')
-
-# nullable=False, asegura que el valor este siempre presente
+    # nullable=False, asegura que el valor este siempre presente
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'))
     vehicle = db.relationship('Vehicles')
 

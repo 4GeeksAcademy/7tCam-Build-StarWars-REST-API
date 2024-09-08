@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Characters, Planets
+from models import db, User, Characters, Planets, Favorites, Vehicles
 #from models import Person
 
 app = Flask(__name__)
@@ -105,9 +105,100 @@ def get_a_planet(planet_id):
         "result" : result
     }
     return jsonify(body_response), 200
+# listando a todos los usuarios
+@app.route('/users', methods=['GET'])
+def get_all_users():
+    #accediendo a la base de datos
+    query_users = User.query.all()
+    print(query_users)
+    #mapeando para recorrer cada item
+    resutls = map(lambda item:item.serialize(), query_users)
+    print(resutls)
+    #casteamos
+    new_result = list(resutls) 
+    print(new_result)
+    response_body = {
+        "msg" : "ok",
+        "result" : new_result
+        
+    }
+    return jsonify(response_body), 200
+# [GET] /users/favorites Listar todos los favoritos que pertenecen al usuario actual.
+@app.route('/users/<int:user_id>/favorites', methods=['GET'])
+def get_user_favorites(user_id):
+    #asi obtiene un usuario en especifico : User.query.get(1), usuario con id 1
+    #listas de fav de un usuario basado en su id, user_id<>clave foranea, relaciona los fav con un usuario
+    favorites = Favorites.query.filter_by(user_id=user_id).all()#primer user_id son los fav relacionador del user y 2do es el dato que se va introducir
+    print(favorites)
+    #Manejo de la Ausencia de Resultados:
+    if not favorites:
+        return jsonify({"msg" : "not found"}),404
+    #Serialización de los Resultados, para convertilo a un objeto, ojo que es una lista 
+    serialized_favorites = [f.serialize() for f in favorites]
+    print(serialized_favorites)
+    
+    return jsonify({"msg" : "ok", "result" : serialized_favorites}), 200
+#[POST] /favorite/planet/<int:planet_id> Añade un nuevo planet favorito al usuario actual con el id = planet_id.
+#agregar un planeta a los fav del usuario en un base de datos
+@app.route('/favorite/planet/<int:planet_id>', methods=['POST'])
+def add_favorite_planet(user_id, planet_id):
+    #imprimiendo lo que recibe, recibe un id
+    print(planet_id)
+    #obtener el usuario por id
+    usuario = User.query.filter_by(user_id=user_id).first()
+    #obtener al planteta por su id
+    planeta = Planets.query.filter_by(planet_id=planet_id).first()
+    # Verificación de la existencia del planeta
+    if not planeta:
+        return jsonify({"msg": "Planet not found"}), 404
+        #verificacion si exite el usario
+    if not usuario:
+        return jsonify({"msg": "User not found"}), 404
+        
+    #creacion de una relacion de favorito 
+    favorite = Favorites(user_id=user_id, planet_id=planet_id)
+    #guarda fav en la base de datos 
+    db.session.add(favorite)
+    db.session.commit()
+    return jsonify({"message": "Planet added to favorites"}), 200
 
 
 
+
+
+
+
+ 
+
+    #capturando la data y cambiandolo a json
+    # data = request.get_json()
+    # return jsonify({"msg" : "ok"}),200
+
+    #consultando por el id ingresado
+    # user = User.query.get(1) 
+    # person = Characters.query.get(planet_id)
+    # if not person:
+    #     return jsonify({"msg": "Character not found"}), 404
+    # favorite = Favorites(user_id=user.id, character_id=planet_id)
+    # db.session.add(favorite)
+    # db.session.commit()
+    # return jsonify({"msg": "Character added to favorites"}), 200
+
+
+
+    # if not user:
+    #         return jsonify({"message": "User not found"}), 404
+    # favorite_list = [f.to_dict() for f in user.favorites]
+    # return jsonify(favorite_list), 200
+
+# puedes hacer un get a favoritos
+# @app.route('/user/<int:user_id>/favorites', methods=['GET'])
+# def get_favorites(user_id):
+#     favorites = Favorites.query.filter_by(user_id = user_id).all()
+#     if len(favorites) < 1:
+#         return jsonify({"msg": "not found"}), 404
+#     serialized_favorites = list(map(lambda x: x.serialize(), favorites))
+#     return serialized_favorites, 200
 
 
 
